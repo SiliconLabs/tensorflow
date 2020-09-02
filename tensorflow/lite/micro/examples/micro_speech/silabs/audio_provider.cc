@@ -38,15 +38,11 @@
 
 #define AlignUp(m, n) ((((m) + (n) - 1) / (n)) * (n))
 
-
-
 static void init_microphone(tflite::ErrorReporter* error_reporter);
 static void microphone_buffer_callback(const void* buf, uint32_t buffer_length_bytes, void *arg);
 
-
 // Buffers up to 2s of audio (aligned to kMaxAudioSampleSize)
 constexpr int kAudioBufferSize = AlignUp(kAudioSampleFrequency * 2, kMaxAudioSampleSize);
-
 
 static struct
 {
@@ -55,9 +51,6 @@ static struct
     int16_t audio_buffer[kAudioBufferSize];
     int16_t sample_buffer[kMaxAudioSampleSize];
 } g_context;
-
-
-
 
 /*************************************************************************************************/
 TfLiteStatus GetAudioSamples(tflite::ErrorReporter* error_reporter,
@@ -68,9 +61,7 @@ TfLiteStatus GetAudioSamples(tflite::ErrorReporter* error_reporter,
     const int start_index = (start_ms * kSamplePerMs) % kAudioBufferSize;
     const int end_index = ((start_ms + duration_ms) * kSamplePerMs) % kAudioBufferSize;
 
-
     init_microphone(error_reporter);
-
 
     if(start_index < end_index)
     {
@@ -95,7 +86,6 @@ int32_t LatestAudioTimestamp()
 {
     return g_context.latest_audio_timestamp_ms;
 }
-
 
 /*************************************************************************************************/
 static void init_microphone(tflite::ErrorReporter* error_reporter)
