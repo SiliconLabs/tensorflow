@@ -1,5 +1,5 @@
 # Settings for Silicon Labs EFM32/EFX32 platforms
-ifneq ($(filter $(TARGET),stk3701a),)
+ifneq ($(filter stk3701a brd4166a, $(TARGET)),)
  
   GCC_ARM := $(MAKEFILE_DIR)/downloads/gcc_embedded/
 
@@ -27,16 +27,30 @@ ifneq ($(filter $(TARGET),stk3701a),)
     -Wall -Wextra -fno-common -fno-delete-null-pointer-checks \
     -Wno-unused-parameter \
     -D__PROGRAM_START -D__STARTUP_CLEAR_BSS \
-    -D__STACK_SIZE=10240 -D__HEAP_SIZE=262144
+    -D__STACK_SIZE=10240 -D__HEAP_SIZE=162144
     
   # Cortex-CM4 common flags
-  ifneq ($(filter $(TARGET), stk3701a),)
-    PLATFORM_FLAGS += \
-      -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mcpu=cortex-m4 \
-      -D__ARM_FEATURE_DSP=1  -DARM_MATH_CM4
-    PLATFORM_LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mcpu=cortex-m4
-  endif
+  PLATFORM_FLAGS += \
+    -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mcpu=cortex-m4 \
+    -D__ARM_FEATURE_DSP=1  -DARM_MATH_CM4
+  PLATFORM_LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mcpu=cortex-m4
     
+
+  # BRD4166A config
+  ifeq ($(TARGET), brd4166a)
+    PLATFORM_FLAGS += \
+      -DEFR32MG12P332F1024GL125 -DEFR32MG12PxxxF1024 \
+      -DEFR32MG12P \
+      -DRETARGET_VCOM
+    PLATFORM_LDFLAGS += -Wl,-T$(GECKO_SDK_DIR)platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/efr32mg12p.ld 
+    PLATFORM_INCLUDES += \
+      -I$(GECKO_SDK_DIR)platform/Device/SiliconLabs/EFR32MG12P/Include \
+      -I$(GECKO_SDK_DIR)hardware/kit/EFR32MG12_BRD4166A/config
+      
+    PLATFORM_CC_SRCS += $(addprefix $(GECKO_SDK_DIR)platform/Device/SiliconLabs/EFR32MG12P/,\
+      Source/system_efr32mg12p.c \
+      Source/GCC/startup_efr32mg12p.c)
+  endif
 
   # STK3701A config
   ifeq ($(TARGET), stk3701a)
@@ -97,7 +111,6 @@ ifneq ($(filter $(TARGET),stk3701a),)
    INCLUDES += \
      -I$(SILABS_EFX32_LIB)/components/microphone \
      -I$(SILABS_EFX32_LIB)/components/microphone/config 
-
      
    # BSP
    PLATFORM_CC_SRCS += $(addprefix $(GECKO_SDK_DIR)hardware/kit/common/bsp/,\
@@ -114,17 +127,8 @@ ifneq ($(filter $(TARGET),stk3701a),)
   # Currently only the micro_speech example is supported
   MICRO_LITE_EXAMPLE_TESTS := tensorflow/lite/micro/examples/micro_speech/Makefile.inc
 
-
-
-
-
-
-
-
-
 OBJCOPY := ${TARGET_TOOLCHAIN_ROOT}$(TARGET_TOOLCHAIN_PREFIX)objcopy
 ELFSIZE := ${TARGET_TOOLCHAIN_ROOT}$(TARGET_TOOLCHAIN_PREFIX)size
-
 
 print_size: $(BINDIR)/$(APP_NAME)
 	$(ELFSIZE) $< 
@@ -136,7 +140,6 @@ $(BINDIR)/$(APP_NAME).bin: $(BINDIR)/$(APP_NAME) print_size
 $(BINDIR)/$(APP_NAME).s37: $(BINDIR)/$(APP_NAME)
 	@mkdir -p $(dir $@)
 	$(OBJCOPY) $< $@ -O srec
-
 
 ifeq ($(HOST_OS),windows)
 COMMANDER := $(SILABS_EFX32_LIB)/tools/commander/windows/commander.exe

@@ -31,10 +31,16 @@
 #include "tensorflow/lite/micro/examples/micro_speech/audio_provider.h"
 #include "tensorflow/lite/micro/examples/micro_speech/micro_features/micro_model_settings.h"
 
-
+#include "bsp.h"
 #include "microphone.h"
 
-
+#if defined(BSP_STK_BRD2204A)
+    #include "config/bsp_microphone_stk3701a.h"
+#elif defined(BSP_TBSENSE2)
+    #include "config/bsp_microphone_brd4166a.h"
+#else
+    #error Unsupported board
+#endif
 
 #define AlignUp(m, n) ((((m) + (n) - 1) / (n)) * (n))
 
@@ -95,7 +101,13 @@ static void init_microphone(tflite::ErrorReporter* error_reporter)
         microphone_config_t config;
         config.sample_rate = kAudioSampleFrequency;
         config.sample_size = kMaxAudioSampleSize;
-        config.resolution = MICROPHONE_RESOLUTION_16BITS;
+        #if MICROPHONE_RESOLUTION == 16
+            config.resolution = MICROPHONE_RESOLUTION_16BITS;
+        #elif MICROPHONE_RESOLUTION == 24
+            config.resolution = MICROPHONE_RESOLUTION_24BITS;
+        #else
+            #error Unknown microphone resolution
+        #endif
         config.flags = MICROPHONE_FLAG_MONO_DROP_OTHER_CHANNEL;
         config.buffer_callback = microphone_buffer_callback;
         config.buffer = g_context.audio_buffer;
