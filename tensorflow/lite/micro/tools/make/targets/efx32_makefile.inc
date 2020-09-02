@@ -151,13 +151,16 @@ ifeq ($(HOST_OS),linux)
 COMMANDER := $(SILABS_EFX32_LIB)/tools/commander/linux/commander/commander
 endif
 
+image: $(BINDIR)/$(APP_NAME).s37
+	$(info Image $< built)
+
 download_commander:
 	$(eval IS_WINDOWS_UBUNTU=$(shell $(SILABS_EFX32_LIB)/tools/check_if_windows_ubuntu.sh))
 	$(if $(filter $(IS_WINDOWS_UBUNTU),true),\
 	  $(eval COMMANDER=$(SILABS_EFX32_LIB)/tools/commander/windows/commander.exe)\
 	  $(eval CMDER_HOST_OS=windows))
-	@python --version >/dev/null || echo "'python' not found in environment PATH"
-	@python $(SILABS_EFX32_LIB)/tools/python/download_commander.py \
+	@python3 --version >/dev/null || echo "'python' not found in environment PATH"
+	@python3 $(SILABS_EFX32_LIB)/tools/python/download_commander.py \
 	        --host_os $(if $(CMDER_HOST_OS),$(CMDER_HOST_OS),$(HOST_OS))\
 	        --output $(dir $(COMMANDER))/download_details.txt
 
